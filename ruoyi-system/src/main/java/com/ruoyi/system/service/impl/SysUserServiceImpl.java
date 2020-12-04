@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cn.hutool.core.util.ObjectUtil;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ruoyi.common.core.domain.PageData;
 import com.ruoyi.common.exception.im.ImException;
 import com.ruoyi.common.exception.im.ImOnlineStatus;
@@ -36,7 +37,7 @@ import com.ruoyi.system.service.ISysUserService;
  * @author ruoyi
  */
 @Service
-public class SysUserServiceImpl implements ISysUserService
+public class SysUserServiceImpl extends ServiceImpl<SysUserMapper,SysUser> implements ISysUserService
 {
     private static final Logger log = LoggerFactory.getLogger(SysUserServiceImpl.class);
 

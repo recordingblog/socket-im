@@ -72,6 +72,9 @@ public class SysUser extends BaseEntity
     @Excel(name = "最后登录IP", type = Type.EXPORT)
     private String loginIp;
 
+    /** 通讯录在线状态 */
+    private Integer onlineStatus;
+
     /** 最后登录时间 */
     @Excel(name = "最后登录时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss", type = Type.EXPORT)
     private Date loginDate;
@@ -165,6 +168,14 @@ public class SysUser extends BaseEntity
     public void setEmail(String email)
     {
         this.email = email;
+    }
+
+    public Integer getOnlineStatus() {
+        return onlineStatus;
+    }
+
+    public void setOnlineStatus(Integer onlineStatus) {
+        this.onlineStatus = onlineStatus;
     }
 
     @Size(min = 0, max = 11, message = "手机号码长度不能超过11个字符")

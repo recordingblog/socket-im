@@ -25,7 +25,6 @@ import io.swagger.annotations.ApiOperation;
  * 
  * @author ruoyi
  */
-@Api("用户信息管理")
 @RestController
 @RequestMapping("/test/user")
 public class TestController extends BaseController
@@ -36,7 +35,6 @@ public class TestController extends BaseController
         users.put(2, new UserEntity(2, "ry", "admin123", "15666666666"));
     }
 
-    @ApiOperation("获取用户列表")
     @GetMapping("/list")
     public AjaxResult userList()
     {
@@ -44,7 +42,6 @@ public class TestController extends BaseController
         return AjaxResult.success(userList);
     }
 
-    @ApiOperation("获取用户详细")
     @ApiImplicitParam(name = "userId", value = "用户ID", required = true, dataType = "int", paramType = "path")
     @GetMapping("/{userId}")
     public AjaxResult getUser(@PathVariable Integer userId)
@@ -59,7 +56,6 @@ public class TestController extends BaseController
         }
     }
 
-    @ApiOperation("新增用户")
     @ApiImplicitParam(name = "userEntity", value = "新增用户信息", dataType = "UserEntity")
     @PostMapping("/save")
     public AjaxResult save(UserEntity user)
@@ -71,7 +67,6 @@ public class TestController extends BaseController
         return AjaxResult.success(users.put(user.getUserId(), user));
     }
 
-    @ApiOperation("更新用户")
     @ApiImplicitParam(name = "userEntity", value = "新增用户信息", dataType = "UserEntity")
     @PutMapping("/update")
     public AjaxResult update(UserEntity user)
@@ -88,7 +83,6 @@ public class TestController extends BaseController
         return AjaxResult.success(users.put(user.getUserId(), user));
     }
 
-    @ApiOperation("删除用户信息")
     @ApiImplicitParam(name = "userId", value = "用户ID", required = true, dataType = "int", paramType = "path")
     @DeleteMapping("/{userId}")
     public AjaxResult delete(@PathVariable Integer userId)

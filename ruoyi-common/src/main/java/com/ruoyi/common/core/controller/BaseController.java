@@ -4,6 +4,7 @@ import java.beans.PropertyEditorSupport;
 import java.util.Date;
 import java.util.List;
 
+import com.alibaba.fastjson.JSONObject;
 import com.ruoyi.common.core.domain.PageData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +64,13 @@ public class BaseController
         return request;
     }
 
+    public boolean check(JSONObject result){
+        if (result.containsKey("code")&&result.getInteger("code")==HttpStatus.SUCCESS){
+            return true;
+        }else {
+            return false;
+        }
+    }
     /**
      * 设置请求分页数据
      */
