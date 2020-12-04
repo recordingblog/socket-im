@@ -25,9 +25,9 @@ public class IMUserController extends BaseController {
      */
     @GetMapping("list")
     @ApiOperation("获取通讯录列表")
-    public AjaxResult getList(){
+    public AjaxResult getList(Long userId){
         try {
-            JSONObject result = imUserService.getList();
+            JSONObject result = imUserService.getList(userId);
             return super.check(result) ? new AjaxResult(HttpStatus.SUCCESS,"success",result.getJSONArray("result"))
                     : new AjaxResult(HttpStatus.ERROR,"DB数据异常");
         }catch (Exception e){

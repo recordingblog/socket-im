@@ -1,11 +1,14 @@
 package com.ruoyi.im.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.ruoyi.common.constant.HttpStatus;
 import com.ruoyi.common.core.domain.entity.SysDept;
 import com.ruoyi.common.core.domain.entity.SysUser;
+import com.ruoyi.im.domain.ApplyFriends;
+import com.ruoyi.im.service.IMFriendService;
 import com.ruoyi.im.service.ImUserService;
 import com.ruoyi.system.service.ISysDeptService;
 import com.ruoyi.system.service.ISysUserService;
@@ -25,16 +28,18 @@ public class IMUserServiceImpl implements ImUserService {
     @Autowired
     private ISysDeptService iSysDeptService;
 
+    @Autowired
+    private IMFriendService imFriendService;
+
 
     @Override
-    public JSONObject getList() {
+    public JSONObject getList(Long userId) {
         JSONObject finalResult = new JSONObject();
         Integer code = HttpStatus.SUCCESS;
         JSONArray result = new JSONArray();
         try {
             QueryWrapper<SysUser> queryWrapper = new QueryWrapper<>();
-
-            result.addAll(getResult(queryWrapper.select("nick_name", "user_id", "dept_id","online_status")));
+            result.addAll(getResult(userId,queryWrapper.select("nick_name", "user_id", "dept_id","online_status")));
         }catch (Exception e){
             code = HttpStatus.ERROR;
         }
@@ -44,7 +49,7 @@ public class IMUserServiceImpl implements ImUserService {
     }
 
     // 获取通讯录部门和用户信息
-    public JSONArray getResult(QueryWrapper<SysUser> queryWrapper){
+    public JSONArray getResult(Long userId,QueryWrapper<SysUser> queryWrapper){
         JSONArray result = new JSONArray();
         List<SysUser> list = iSysUserService.list(queryWrapper);
         Map<Long, List<SysUser>> collect = list.stream().collect(Collectors.groupingBy(d->d.getDeptId()));
@@ -53,20 +58,29 @@ public class IMUserServiceImpl implements ImUserService {
             JSONObject info = new JSONObject();
             info.put("deptId",dept.getDeptId());
             info.put("deptName",dept.getDeptName());
-            info.put("deptUser",getDeptUser(v));
+            info.put("deptUser",getDeptUser(userId,v));
             result.add(info);
         });
         return result;
     }
 
     // 获取部门下所有通讯录用户
-    public JSONArray getDeptUser(List<SysUser> v){
+    public JSONArray getDeptUser(Long userId,List<SysUser> v){
         JSONArray deptUser = new JSONArray();
         v.stream().forEach(e->{
             JSONObject user = new JSONObject();
             user.put("userId",e.getUserId());
             user.put("nickName",e.getNickName());
             user.put("onlineStatus",e.getOnlineStatus());
+            QueryWrapper<ApplyFriends> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("user_id",userId);
+            queryWrapper.eq("friend_id",e.getUserId());
+            ApplyFriends one = imFriendService.getOne(queryWrapper);
+            if (ObjectUtil.isNull(one) || one.getApplyStatus()==0){
+                user.put("addStatus",0);
+            }else {
+                user.put("addStatus",one.getApplyStatus());
+            }
             deptUser.add(user);
         });
         return deptUser;
