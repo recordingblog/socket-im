@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-public class ImUserServiceImpl implements ImUserService {
+public class IMUserServiceImpl implements ImUserService {
 
     @Autowired
     private ISysUserService iSysUserService;
@@ -33,6 +33,7 @@ public class ImUserServiceImpl implements ImUserService {
         JSONArray result = new JSONArray();
         try {
             QueryWrapper<SysUser> queryWrapper = new QueryWrapper<>();
+
             result.addAll(getResult(queryWrapper.select("nick_name", "user_id", "dept_id","online_status")));
         }catch (Exception e){
             code = HttpStatus.ERROR;

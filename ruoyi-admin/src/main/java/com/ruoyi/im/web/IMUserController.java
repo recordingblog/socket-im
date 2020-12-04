@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("im/communication")
 @Api(tags = "即时通讯-通讯录接口")
-public class ImUserController extends BaseController {
+public class IMUserController extends BaseController {
 
     @Autowired
     private ImUserService imUserService;
