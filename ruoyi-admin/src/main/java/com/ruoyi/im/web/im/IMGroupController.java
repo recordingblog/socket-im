@@ -1,4 +1,4 @@
-package com.ruoyi.im.web;
+package com.ruoyi.im.web.im;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -10,8 +10,8 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.domain.entity.SysUser;
 import com.ruoyi.common.utils.DateUtils;
-import com.ruoyi.im.domain.ApplyFriends;
-import com.ruoyi.im.domain.Group;
+import com.ruoyi.im.domain.im.ApplyFriends;
+import com.ruoyi.im.domain.im.Group;
 import com.ruoyi.im.service.IMFriendService;
 import com.ruoyi.im.service.IMGroupService;
 import com.ruoyi.system.service.ISysUserService;

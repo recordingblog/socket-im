@@ -1,4 +1,4 @@
-package com.ruoyi.im.web;
+package com.ruoyi.im.web.im;
 import com.alibaba.fastjson.JSONObject;
 import com.ruoyi.common.constant.HttpStatus;
 import com.ruoyi.common.core.controller.BaseController;

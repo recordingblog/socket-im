@@ -181,3 +181,6 @@ xss:
   excludes: /system/notice/*
   # 匹配链接
   urlPatterns: /system/*,/monitor/*,/tool/*
+go-fast:
+  server:
+    ip: http://127.129.112.25:18099

@@ -1,7 +1,7 @@
 package com.ruoyi.im.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.ruoyi.im.domain.ApplyFriends;
+import com.ruoyi.im.domain.im.ApplyFriends;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

@@ -2,7 +2,7 @@ package com.ruoyi.im.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ruoyi.common.core.domain.PageData;
-import com.ruoyi.im.domain.Group;
+import com.ruoyi.im.domain.im.Group;
 import com.ruoyi.im.service.IMGroupService;
 import com.ruoyi.im.mapper.IMGroupMapper;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.ruoyi.common.constant.HttpStatus;
 import com.ruoyi.common.core.domain.entity.SysDept;
 import com.ruoyi.common.core.domain.entity.SysUser;
-import com.ruoyi.im.domain.ApplyFriends;
+import com.ruoyi.im.domain.im.ApplyFriends;
 import com.ruoyi.im.service.IMFriendService;
 import com.ruoyi.im.service.ImUserService;
 import com.ruoyi.system.service.ISysDeptService;
@@ -31,13 +31,14 @@ public class IMUserServiceImpl implements ImUserService {
     @Autowired
     private IMFriendService imFriendService;
 
-
+    // 获取通讯录列表
     @Override
     public JSONObject getList(Long userId) {
         JSONObject finalResult = new JSONObject();
         Integer code = HttpStatus.SUCCESS;
         JSONArray result = new JSONArray();
         try {
+            // 构造查询条件
             QueryWrapper<SysUser> queryWrapper = new QueryWrapper<>();
             result.addAll(getResult(userId,queryWrapper.select("nick_name", "user_id", "dept_id","online_status")));
         }catch (Exception e){
@@ -48,10 +49,11 @@ public class IMUserServiceImpl implements ImUserService {
         return finalResult;
     }
 
-    // 获取通讯录部门和用户信息
+    // 获取结果集
     public JSONArray getResult(Long userId,QueryWrapper<SysUser> queryWrapper){
         JSONArray result = new JSONArray();
         List<SysUser> list = iSysUserService.list(queryWrapper);
+        // 按部门对用户进行分组
         Map<Long, List<SysUser>> collect = list.stream().collect(Collectors.groupingBy(d->d.getDeptId()));
         collect.forEach((k,v)->{
             SysDept dept = iSysDeptService.selectDeptById(k);
@@ -64,7 +66,7 @@ public class IMUserServiceImpl implements ImUserService {
         return result;
     }
 
-    // 获取部门下所有通讯录用户
+    // 获取部门下的用户信息
     public JSONArray getDeptUser(Long userId,List<SysUser> v){
         JSONArray deptUser = new JSONArray();
         v.stream().forEach(e->{
@@ -76,11 +78,7 @@ public class IMUserServiceImpl implements ImUserService {
             queryWrapper.eq("user_id",userId);
             queryWrapper.eq("friend_id",e.getUserId());
             ApplyFriends one = imFriendService.getOne(queryWrapper);
-            if (ObjectUtil.isNull(one) || one.getApplyStatus()==0){
-                user.put("addStatus",0);
-            }else {
-                user.put("addStatus",one.getApplyStatus());
-            }
+            user.put("addStatus",ObjectUtil.isNull(one) || one.getApplyStatus()==0?0:one.getApplyStatus());
             deptUser.add(user);
         });
         return deptUser;

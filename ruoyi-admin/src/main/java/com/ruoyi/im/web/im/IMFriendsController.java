@@ -1,13 +1,12 @@
-package com.ruoyi.im.web;
+package com.ruoyi.im.web.im;
 
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.ruoyi.common.constant.HttpStatus;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.domain.PageData;
-import com.ruoyi.common.core.domain.entity.SysUser;
 import com.ruoyi.common.utils.DateUtils;
-import com.ruoyi.im.domain.ApplyFriends;
+import com.ruoyi.im.domain.im.ApplyFriends;
 import com.ruoyi.im.service.IMFriendService;
 import com.ruoyi.im.service.IMGroupService;
 import io.swagger.annotations.Api;

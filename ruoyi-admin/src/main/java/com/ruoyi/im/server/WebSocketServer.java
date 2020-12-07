@@ -3,7 +3,7 @@ package com.ruoyi.im.server;
 import com.alibaba.fastjson.JSONObject;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.exception.im.ImException;
-import com.ruoyi.im.domain.ImMessage;
+import com.ruoyi.im.domain.im.ImMessage;
 import com.ruoyi.im.type.ImMessageEnum;
 import com.ruoyi.im.utils.WebSocketUtils;
 import lombok.Data;
@@ -53,9 +53,16 @@ public class WebSocketServer {
             ImMessage imMessage = JSONObject.parseObject(message, ImMessage.class);
             log.info("来自客户端的消息:{},发送人:{}",message,imMessage.getFormId());
             Integer sendType = imMessage.getSendType();
-            if (sendType== ImMessageEnum.SEND_TYPE_ONE.getCode()){ WebSocketUtils.sendToUserText(imMessage.getToId(),message);
-            }else if (sendType== ImMessageEnum.SEND_TYPE_ALL.getCode()){ WebSocketUtils.sendToUserAllText(message);
-            }else { throw new ImException("消息类型异常"); }
+            // 单发
+            if (sendType == ImMessageEnum.SEND_TYPE_ONE.getCode()){
+                WebSocketUtils.sendToUserText(imMessage.getToId(),message);
+            }
+            // 群发
+            else if (sendType == ImMessageEnum.SEND_TYPE_ALL.getCode()){
+                WebSocketUtils.sendToUserAllText(message);
+            }else {
+                throw new ImException("消息类型异常");
+            }
         }catch (Exception e){
             WebSocketUtils.sendToUserText(this.userId,getResult(-1,"请使用json格式的数据发送消息").toString());
         }
