@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ruoyi.common.constant.HttpStatus;
 import com.ruoyi.common.core.domain.PageData;
@@ -26,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @Service
@@ -148,12 +150,161 @@ public class IMGroupChatServiceImpl extends ServiceImpl<IMGroupChatMapper,GroupC
         return result;
     }
 
+    /**
+     * 我的群列表
+     * @param param
+     * @return
+     */
+    @Override
+    public JSONArray myGroupList(PageData param) {
+        JSONArray result = new JSONArray();
+        // 查询用户加入的所有的群聊
+        List<GroupPerson> list = imGroupPersonService.list(
+                new QueryWrapper<GroupPerson>().eq("person_id", param.getString("userId")))
+                .stream()
+                .filter(e->e.getStatus()==1).collect(Collectors.toList());
+        list.stream().forEach(e->{
+            param.put("value",e.getGroupId());
+            result.add(getOne(getQueryEntity("group_id", param)));
+        });
+        return result;
+    }
+
+    /**
+     * 查询群用户
+     * @param param
+     * @return
+     */
+    @Override
+    public JSONObject groupUser(PageData param) {
+        JSONObject result = new JSONObject();
+        // 群用户集合
+        JSONArray groupUser = new JSONArray();
+        AtomicReference<JSONObject> cloneInfo = new AtomicReference<>(new JSONObject());
+        // 通过群号查询已加入群聊的用户信息
+        List<GroupPerson> list = imGroupPersonService.list(new QueryWrapper<GroupPerson>()
+                .eq("group_id", param.getString("groupId")).eq("status",1));
+        // 过滤群用户信息
+        list.stream().forEach(e->{
+            JSONObject info = JSONObject.parseObject(JSON.toJSONString(e));
+            if (info.getString("personType").equals("2")){
+                cloneInfo.set(ObjectUtil.cloneByStream(info));
+            }
+            // 查询群用户详情
+            SysUser sysUser = userService.selectUserById(Long.parseLong(e.getPersonId()));
+            // 昵称
+            info.put("nickName",sysUser.getNickName());
+            info.remove("groupId");
+            info.remove("status");
+            // 头像
+            info.put("avatar",sysUser.getAvatar());
+            groupUser.add(info);
+        });
+        JSONObject info = cloneInfo.get();
+        result.put("groupId",param.getString("groupId"));
+        result.put("groupUser",groupUser);
+        result.put("createUser",info.getString("personId"));
+        return result;
+    }
+
+    /**
+     * 退出群聊
+     * @param param
+     * @return
+     */
+    @Override
+    public JSONObject quitGroup(PageData param) {
+        JSONObject result = new JSONObject();
+        Integer code = HttpStatus.SUCCESS;
+        String msg = "success";
+        boolean flag = true;
+        // 身份校验
+        GroupPerson check = imGroupPersonService.getOne(new QueryWrapper<GroupPerson>().eq("group_id", param.getString("groupId"))
+                .eq("person_id", param.getString("userId")));
+        // 判断是群用户是否为群主
+        if (check.getPersonType() == 2){
+            code = HttpStatus.ERROR;
+            msg = "群主不允许直接退出群聊,请移交群主后退出";
+        }else {
+            try {
+                UpdateWrapper<GroupPerson> eq = new UpdateWrapper<GroupPerson>()
+                        .set("status", 2)
+                        .eq("group_id", param.getString("groupId"))
+                        .eq("person_id", param.getString("userId"));
+                flag = imGroupPersonService.update(eq);
+            }catch (Exception e){
+                code = HttpStatus.ERROR;
+                msg = "系统异常,异常信息"+e.toString();
+            }
+        }
+        result.put("code",code);
+        result.put("msg",msg);
+        result.put("data",flag);
+        return result;
+
+    }
+
+    /**
+     * 解散群或者恢复群
+     * @param param
+     * @return
+     */
+    @Override
+    public JSONObject dissolutionGroup(PageData param) {
+        JSONObject result = new JSONObject();
+        Integer code = HttpStatus.SUCCESS;
+        String msg = "success";
+        boolean flag = true;
+        try {
+            // 类型校验
+            String status = param.getString("status");
+            if (status.equals("0") || status.equals("1")){
+                GroupChat info = getOne(new QueryWrapper<GroupChat>()
+                        .eq("group_id", param.getString("groupId"))
+                        .eq("create_user", param.getString("createUser")));
+                if (ObjectUtil.isNull(info)){
+                    code = HttpStatus.ERROR;
+                    msg = "群号与创建人信息不符";
+                }else {
+                    String groupId = param.getString("groupId");
+                    flag = update(new UpdateWrapper<GroupChat>()
+                            .set("status", status)
+                            .eq("group_id", groupId)
+                            .eq("create_user", param.getString("createUser"))
+                    );
+                    if (flag){
+                        UpdateWrapper<GroupPerson> updateWrapper = new UpdateWrapper<>();
+                        if (status.equals("0")) updateWrapper
+                                .set("status",1)
+                                .eq("status",3);
+                        else if (status.equals("1")) updateWrapper
+                                .set("status",3)
+                                .eq("status",1);
+                        updateWrapper.eq("group_id",groupId);
+                        flag = imGroupPersonService.update(updateWrapper);
+                    }
+                }
+            }else {
+                code = HttpStatus.ERROR;
+                msg = "类型不符";
+            }
+        }catch (Exception e){
+            code = HttpStatus.ERROR;
+            msg = "系统异常,异常信息"+e.toString();
+        }
+        result.put("code",code);
+        result.put("msg",msg);
+        result.put("data",flag);
+        return result;
+    }
+
     public JSONObject getResultInfo(List<GroupPerson> all,PageData param,GroupChat e){
         JSONObject info = JSONObject.parseObject(JSON.toJSONString(e));
         info.put("addStatus",all.stream().filter(j -> j.getPersonId().equals(param.getString("userId"))).collect(Collectors.toList()).size()>0?1:0);
         info.put("addNum",all.size());
         return info;
     }
+
     // 构造查询条件
     public QueryWrapper<GroupChat> getQueryEntity(String column,PageData param){
         QueryWrapper<GroupChat> eq = new QueryWrapper<GroupChat>().eq(column,param.getString("value"));

@@ -69,7 +69,7 @@ public class IMGroupChatController extends BaseController {
     @ApiOperationSupport(includeParameters = {"groupId","userId"})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "groupId", value = "群号码", required = true),
-            @ApiImplicitParam(name = "userId", value = "加入用户id", required = true),
+            @ApiImplicitParam(name = "userId", value = "用户id", required = true),
     })
     public AjaxResult addGroup(){
         try {
@@ -81,4 +81,75 @@ public class IMGroupChatController extends BaseController {
             return new AjaxResult(HttpStatus.ERROR,"系统异常",e.toString());
         }
     }
+
+    @PostMapping("quitGroup")
+    @ApiOperation("退出群")
+    @ApiOperationSupport(includeParameters = {"groupId","userId"})
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "groupId", value = "群号码", required = true),
+            @ApiImplicitParam(name = "userId", value = "用户id", required = true),
+    })
+    public AjaxResult quitGroup(){
+        try {
+            JSONObject result = imGroupChatService.quitGroup(this.getPageData());
+            if (check(result)){
+                return new AjaxResult(HttpStatus.SUCCESS,result.getString("msg"),result.getString("data"));
+            }else {
+                return new AjaxResult(HttpStatus.ERROR,result.getString("msg"));
+            }
+        }catch (Exception e){
+            return new AjaxResult(HttpStatus.ERROR,"系统异常",e.toString());
+        }
+    }
+
+    @PostMapping("dissolutionGroup")
+    @ApiOperation("解散群|恢复解散")
+    @ApiOperationSupport(includeParameters = {"groupId","createUser","status"})
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "groupId", value = "群号码", required = true),
+            @ApiImplicitParam(name = "createUser", value = "创建用户id(群主id)", required = true),
+            @ApiImplicitParam(name = "status", value = "群状态 0恢复 1解散", required = true),
+    })
+    public AjaxResult dissolutionGroup(){
+        try {
+            JSONObject result = imGroupChatService.dissolutionGroup(this.getPageData());
+            if (check(result)){
+                return new AjaxResult(HttpStatus.SUCCESS,result.getString("msg"),result.getString("data"));
+            }else {
+                return new AjaxResult(HttpStatus.ERROR,result.getString("msg"));
+            }
+        }catch (Exception e){
+            return new AjaxResult(HttpStatus.ERROR,"系统异常",e.toString());
+        }
+    }
+
+    @GetMapping("myGroupList")
+    @ApiOperationSupport(includeParameters = {"userId"})
+    @ApiOperation("我的群列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "userId", value = "用户id", required = true),
+    })
+    public AjaxResult myGroupList(){
+        try {
+            JSONArray result = imGroupChatService.myGroupList(this.getPageData());
+            return new AjaxResult(HttpStatus.SUCCESS,"success",result);
+        }catch (Exception e){
+            return new AjaxResult(HttpStatus.ERROR,"系统异常",e.toString());
+        }
+    }
+
+    @GetMapping("groupUser")
+    @ApiOperationSupport(includeParameters = {"groupId"})
+    @ApiOperation("查询群用户")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "groupId", value = "群id", required = true),
+    })
+    public AjaxResult groupUser(){
+        try {
+            return new AjaxResult(HttpStatus.SUCCESS,"success", imGroupChatService.groupUser(this.getPageData()));
+        }catch (Exception e){
+            return new AjaxResult(HttpStatus.ERROR,"系统异常",e.toString());
+        }
+    }
+
 }

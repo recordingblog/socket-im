@@ -78,7 +78,7 @@ public class IMGroupController extends BaseController {
         }
     }
 
-    @ApiOperation("查询我的分组")
+    @ApiOperation("查询我的分组(分组+好友)")
     @PostMapping("groupList")
     public AjaxResult groupList(Long userId){
         try {

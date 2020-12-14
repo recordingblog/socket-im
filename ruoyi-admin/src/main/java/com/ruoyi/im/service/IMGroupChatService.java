@@ -13,4 +13,12 @@ public interface IMGroupChatService extends IService<GroupChat> {
     JSONArray queryGroup(PageData pageData);
     // 加入群
     JSONObject addGroup(PageData pageData);
+    // 我的群列表
+    JSONArray myGroupList(PageData pageData);
+    // 查询群用户
+    JSONObject groupUser(PageData pageData);
+    // 退出群
+    JSONObject quitGroup(PageData pageData);
+    // 解散群
+    JSONObject dissolutionGroup(PageData pageData);
 }
