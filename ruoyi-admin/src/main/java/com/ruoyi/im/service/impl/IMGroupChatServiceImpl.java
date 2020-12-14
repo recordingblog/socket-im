@@ -1,6 +1,10 @@
 package com.ruoyi.im.service.impl;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ruoyi.common.constant.HttpStatus;
 import com.ruoyi.common.core.domain.PageData;
@@ -16,6 +20,9 @@ import com.ruoyi.im.utils.GoFastUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class IMGroupChatServiceImpl extends ServiceImpl<IMGroupChatMapper,GroupChat> implements IMGroupChatService {
@@ -53,6 +60,40 @@ public class IMGroupChatServiceImpl extends ServiceImpl<IMGroupChatMapper,GroupC
         return result;
     }
 
+    /**
+     * 搜索群
+     * @param param
+     * @return
+     */
+    @Override
+    public JSONArray queryGroup(PageData param) {
+        // 获取搜索到的群信息
+        JSONArray finalResult = new JSONArray();
+        List<GroupChat> result = new ArrayList<>();
+        result.addAll(
+                param.getString("queryType").equals("1")
+                ?
+                list(getQueryEntity("group_id",param)) : list(getQueryEntity("group_name",param))
+        );
+        // 迭代群信息 通过群号和搜索人 判断是否搜索人是否已加入群聊
+        result.stream().forEach(e->{
+            //
+            List<GroupPerson> list = imGroupPersonService.list(
+                    new QueryWrapper<GroupPerson>().eq("person_id", param.getString("userId")).eq("group_id",e.getGroupId())
+            );
+            JSONObject info = JSONObject.parseObject(JSON.toJSONString(e));
+            info.put("status",list.size()>0?1:0);
+            finalResult.add(info);
+        });
+        return finalResult;
+    }
+
+    // 构造查询条件
+    public QueryWrapper<GroupChat> getQueryEntity(String column,PageData param){
+        QueryWrapper<GroupChat> eq = new QueryWrapper<GroupChat>().eq(column,param.getString("value"));
+        return eq;
+    }
+
     public GroupPerson getGroupPersonPasram(GroupChat groupChat,PageData param){
         GroupPerson groupPerson = new GroupPerson();
         groupPerson.setGroupId(groupChat.getGroupId());
@@ -63,7 +104,6 @@ public class IMGroupChatServiceImpl extends ServiceImpl<IMGroupChatMapper,GroupC
     }
 
     public GroupChat getCreateGroupParam(PageData param,GoFastResult images){
-
         GroupChat groupChat = new GroupChat();
         // 群名称
         groupChat.setGroupName(param.getString("groupName"));
@@ -75,6 +115,11 @@ public class IMGroupChatServiceImpl extends ServiceImpl<IMGroupChatMapper,GroupC
         groupChat.setCreateUser(Integer.parseInt(param.getString("createUser")));
         // 创建时间
         groupChat.setCreateTime(DateUtils.getTime());
+        groupChat.setType(0);
+        String remark = param.getString("remark");
+        if (!StrUtil.isEmpty(remark)){
+            groupChat.setRemark(remark);
+        }
         return groupChat;
     }
 }
