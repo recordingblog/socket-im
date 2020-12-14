@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class IMGroupChatServiceImpl extends ServiceImpl<IMGroupChatMapper,GroupChat> implements IMGroupChatService {
@@ -77,17 +78,20 @@ public class IMGroupChatServiceImpl extends ServiceImpl<IMGroupChatMapper,GroupC
         );
         // 迭代群信息 通过群号和搜索人 判断是否搜索人是否已加入群聊
         result.stream().forEach(e->{
-            //
-            List<GroupPerson> list = imGroupPersonService.list(
-                    new QueryWrapper<GroupPerson>().eq("person_id", param.getString("userId")).eq("group_id",e.getGroupId())
+            List<GroupPerson> all = imGroupPersonService.list(
+                    new QueryWrapper<GroupPerson>().eq("group_id", e.getGroupId())
             );
-            JSONObject info = JSONObject.parseObject(JSON.toJSONString(e));
-            info.put("status",list.size()>0?1:0);
-            finalResult.add(info);
+            finalResult.add(getResultInfo(all,param,e));
         });
         return finalResult;
     }
 
+    public JSONObject getResultInfo(List<GroupPerson> all,PageData param,GroupChat e){
+        JSONObject info = JSONObject.parseObject(JSON.toJSONString(e));
+        info.put("status",all.stream().filter(j -> j.getPersonId().equals(param.getString("userId"))).collect(Collectors.toList()).size()>0?1:0);
+        info.put("addNum",all.size());
+        return info;
+    }
     // 构造查询条件
     public QueryWrapper<GroupChat> getQueryEntity(String column,PageData param){
         QueryWrapper<GroupChat> eq = new QueryWrapper<GroupChat>().eq(column,param.getString("value"));
