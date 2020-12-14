@@ -39,4 +39,9 @@ public class GroupChat {
      * 允许加入群聊最大人数
      */
     private Integer maxPerson;
+
+    /**
+     * 群状态 0待审核 1已加入 2拒绝加入
+     */
+    private Integer status;
 }

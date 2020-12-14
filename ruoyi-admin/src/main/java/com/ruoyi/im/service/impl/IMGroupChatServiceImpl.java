@@ -1,4 +1,5 @@
 package com.ruoyi.im.service.impl;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -8,6 +9,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ruoyi.common.constant.HttpStatus;
 import com.ruoyi.common.core.domain.PageData;
+import com.ruoyi.common.core.domain.entity.SysUser;
 import com.ruoyi.common.utils.DateUtils;
 import com.ruoyi.im.domain.fast.GoFastResult;
 import com.ruoyi.im.domain.im.GroupChat;
@@ -17,6 +19,7 @@ import com.ruoyi.im.service.IMGroupChatService;
 import com.ruoyi.im.service.IMGroupPersonService;
 import com.ruoyi.im.type.IMPersonEnum;
 import com.ruoyi.im.utils.GoFastUtils;
+import com.ruoyi.system.service.ISysUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,6 +36,9 @@ public class IMGroupChatServiceImpl extends ServiceImpl<IMGroupChatMapper,GroupC
 
     @Autowired
     private GoFastUtils goFastUtils;
+
+    @Autowired
+    private ISysUserService userService;
 
 
     /**
@@ -86,9 +92,65 @@ public class IMGroupChatServiceImpl extends ServiceImpl<IMGroupChatMapper,GroupC
         return finalResult;
     }
 
+    /**
+     * 加入群
+     * @param param
+     * @return
+     */
+    @Override
+    public JSONObject addGroup(PageData param) {
+        JSONObject result = new JSONObject();
+        Integer code = HttpStatus.SUCCESS;
+        String msg = "success";
+        boolean flag = true;
+        try {
+            SysUser user = userService.selectUserById(Long.parseLong(param.getString("userId")));
+            if (ObjectUtil.isNull(user)){
+                code = HttpStatus.ERROR;
+                msg = "用户信息不存在";
+            }else {
+                // 状态校验
+                GroupPerson check = imGroupPersonService.getOne(
+                        new QueryWrapper<GroupPerson>().eq("group_id",
+                                param.getString("groupId")).eq("person_id", param.getString("userId")));
+                if (ObjectUtil.isNull(check)){
+                    // 设置查询参数
+                    param.put("value",param.getString("groupId"));
+                    // 获取群信息
+                    GroupChat info = getOne(getQueryEntity("group_id", param));
+                    // 创建加群用户实体类
+                    GroupPerson groupPerson = new GroupPerson();
+                    groupPerson.setGroupId(param.getString("groupId"));
+                    groupPerson.setPersonId(param.getString("userId"));
+                    groupPerson.setPersonType(0);
+                    groupPerson.setTime(DateUtils.getTime());
+                    // 判断加群类型是直接加入还是审核加入
+                    groupPerson.setStatus(info.getType()==0?0:1);
+                    flag = imGroupPersonService.save(groupPerson);
+                }else {
+                    if (check.getStatus()==0) {
+                        code = HttpStatus.ERROR;
+                        msg = "该用户已申请加入群聊,请等待管理员进行审核";
+                    }
+                    else if (check.getPersonType()==1||check.getPersonType()==2) {
+                        code = HttpStatus.ERROR;
+                        msg = "该用户已经是群主或者管理员";
+                    }
+                }
+            }
+        }catch (Exception e){
+            code = HttpStatus.ERROR;
+            msg="系统异常,异常信息:"+e.toString();
+        }
+        result.put("code",code);
+        result.put("msg",msg);
+        result.put("data",flag);
+        return result;
+    }
+
     public JSONObject getResultInfo(List<GroupPerson> all,PageData param,GroupChat e){
         JSONObject info = JSONObject.parseObject(JSON.toJSONString(e));
-        info.put("status",all.stream().filter(j -> j.getPersonId().equals(param.getString("userId"))).collect(Collectors.toList()).size()>0?1:0);
+        info.put("addStatus",all.stream().filter(j -> j.getPersonId().equals(param.getString("userId"))).collect(Collectors.toList()).size()>0?1:0);
         info.put("addNum",all.size());
         return info;
     }
@@ -104,6 +166,7 @@ public class IMGroupChatServiceImpl extends ServiceImpl<IMGroupChatMapper,GroupC
         groupPerson.setPersonId(param.getString("createUser"));
         groupPerson.setPersonType(IMPersonEnum.TYPE_LEADER.getCode());
         groupPerson.setTime(DateUtils.getTime());
+        groupPerson.setStatus(1);
         return groupPerson;
     }
 
@@ -119,7 +182,6 @@ public class IMGroupChatServiceImpl extends ServiceImpl<IMGroupChatMapper,GroupC
         groupChat.setCreateUser(Integer.parseInt(param.getString("createUser")));
         // 创建时间
         groupChat.setCreateTime(DateUtils.getTime());
-        groupChat.setType(0);
         String remark = param.getString("remark");
         if (!StrUtil.isEmpty(remark)){
             groupChat.setRemark(remark);

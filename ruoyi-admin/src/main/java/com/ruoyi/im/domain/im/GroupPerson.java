@@ -20,4 +20,8 @@ public class GroupPerson {
      * 入群时间
      */
     private String time;
+    /**
+     * 入群状态 0待审核 1已加入
+     */
+    private Integer status;
 }

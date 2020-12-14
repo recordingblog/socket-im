@@ -55,11 +55,28 @@ public class IMGroupChatController extends BaseController {
     public AjaxResult queryGroup(){
         try {
             PageData param = this.getPageData();
-            if (!param.getString("queryType").equals("1")&&!param.getString("queryType").equals("2")){
-                return new AjaxResult(HttpStatus.ERROR,"搜索类型不符");
-            }
-            JSONArray result = imGroupChatService.queryGroup(param);
-            return new AjaxResult(HttpStatus.SUCCESS,"success",result);
+            return !param.getString("queryType").equals("1")&&!param.getString("queryType").equals("2")
+                    ? new AjaxResult(HttpStatus.ERROR,"搜索类型不符")
+                    : new AjaxResult(HttpStatus.SUCCESS,"success",imGroupChatService.queryGroup(param));
+        }catch (Exception e){
+            return new AjaxResult(HttpStatus.ERROR,"系统异常",e.toString());
+        }
+    }
+
+
+    @PostMapping("addGroup")
+    @ApiOperation("加入群")
+    @ApiOperationSupport(includeParameters = {"groupId","userId"})
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "groupId", value = "群号码", required = true),
+            @ApiImplicitParam(name = "userId", value = "加入用户id", required = true),
+    })
+    public AjaxResult addGroup(){
+        try {
+            JSONObject result = imGroupChatService.addGroup(this.getPageData());
+            return check(result)
+                    ? new AjaxResult(HttpStatus.SUCCESS,result.getString("msg"),result.getString("data"))
+                    : new AjaxResult(HttpStatus.ERROR,"加入失败,"+result.getString("msg"));
         }catch (Exception e){
             return new AjaxResult(HttpStatus.ERROR,"系统异常",e.toString());
         }
