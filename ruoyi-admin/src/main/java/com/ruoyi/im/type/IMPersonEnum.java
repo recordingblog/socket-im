@@ -5,17 +5,18 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum ImMessageEnum {
+public enum IMPersonEnum {
 
-    SEND_TYPE_ONE(1, "单发"),
-    SEND_TYPE_ALL(2, "群发"),
+    TYPE_ORDINARY(0, "成员"),
+    TYPE_MANAGER(1, "管理员"),
+    TYPE_LEADER(2,"群主"),
     ;
 
     private Integer code;
     private String msg;
 
-    public static ImMessageEnum getCode(Integer code){
-        for(ImMessageEnum enums: ImMessageEnum.values()){
+    public static IMPersonEnum getCode(Integer code){
+        for(IMPersonEnum enums: IMPersonEnum.values()){
             if(enums.code.equals(code)){
                 return enums;
             }

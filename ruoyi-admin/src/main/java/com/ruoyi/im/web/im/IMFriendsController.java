@@ -32,7 +32,8 @@ public class IMFriendsController {
 
     @ApiOperation("添加好友")
     @PostMapping("addFriend")
-    public AjaxResult addFriend(@ApiParam(value = "分组id",required = true) Long groupId, @ApiParam(value = "用户id",required = true)Long userId, @ApiParam(value = "好友id",required = true)Long friendId){
+    public AjaxResult addFriend(@ApiParam(value = "分组id",required = true) Long groupId,
+                                @ApiParam(value = "用户id",required = true)Long userId, @ApiParam(value = "好友id",required = true)Long friendId){
         try {
             PageData group = groupService.check(groupId,userId);
             if (ObjectUtil.isNotNull(group)){

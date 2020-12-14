@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.exception.im.ImException;
 import com.ruoyi.im.domain.im.ImMessage;
-import com.ruoyi.im.type.ImMessageEnum;
+import com.ruoyi.im.type.IMMessageEnum;
 import com.ruoyi.im.utils.WebSocketUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -54,11 +54,11 @@ public class WebSocketServer {
             log.info("来自客户端的消息:{},发送人:{}",message,imMessage.getFormId());
             Integer sendType = imMessage.getSendType();
             // 单发
-            if (sendType == ImMessageEnum.SEND_TYPE_ONE.getCode()){
+            if (sendType == IMMessageEnum.SEND_TYPE_ONE.getCode()){
                 WebSocketUtils.sendToUserText(imMessage.getToId(),message);
             }
             // 群发
-            else if (sendType == ImMessageEnum.SEND_TYPE_ALL.getCode()){
+            else if (sendType == IMMessageEnum.SEND_TYPE_ALL.getCode()){
                 WebSocketUtils.sendToUserAllText(message);
             }else {
                 throw new ImException("消息类型异常");
