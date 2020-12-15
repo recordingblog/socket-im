@@ -48,7 +48,7 @@ public class IMGroupChatController extends BaseController {
     @ApiOperation("搜索群")
     @ApiOperationSupport(includeParameters = {"queryType","value"})
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "queryType", value = "搜索类型", required = true),
+            @ApiImplicitParam(name = "queryType", value = "搜索类型 1通过群号搜索 2通过昵称搜索", required = true),
             @ApiImplicitParam(name = "value", value = "群号或者群名称", required = true),
             @ApiImplicitParam(name = "userId", value = "搜索人id", required = true),
     })
@@ -152,4 +152,29 @@ public class IMGroupChatController extends BaseController {
         }
     }
 
+
+    @PostMapping("update")
+    @ApiOperation("群昵称|群描述|加群方式修改")
+    @ApiOperationSupport(includeParameters = {"groupId","createUser","type","value"})
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "groupId", value = "群号码", required = true),
+            @ApiImplicitParam(name = "createUser", value = "创建用户id(群主id)", required = true),
+            @ApiImplicitParam(name = "type", value = "0群昵称修改 1群描述修改 2加群方式修改(0审核加入 1自动加入)", required = true),
+            @ApiImplicitParam(name = "value", value = "加群方式 0审核加入 1自动加入", required = true),
+    })
+    public AjaxResult update(){
+        try {
+            String type = this.getPageData().getString("type");
+            if (type.equals("0") || type.equals("1") || type.equals("2")){
+                JSONObject result = imGroupChatService.updateByType(type,this.getPageData());
+                return check(imGroupChatService.updateByType(type,this.getPageData()))
+                        ? new AjaxResult(HttpStatus.SUCCESS,result.getString("msg"),result.getString("data"))
+                        : new AjaxResult(HttpStatus.ERROR,result.getString("msg"));
+            }else {
+                return new AjaxResult(HttpStatus.ERROR,"参数类型不符");
+            }
+        }catch (Exception e){
+            return new AjaxResult(HttpStatus.ERROR,"系统异常",e.toString());
+        }
+    }
 }

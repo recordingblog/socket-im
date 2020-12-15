@@ -298,6 +298,43 @@ public class IMGroupChatServiceImpl extends ServiceImpl<IMGroupChatMapper,GroupC
         return result;
     }
 
+    /**
+     * 群昵称|群描述|加群方式修改
+     * @param type
+     * @param param
+     * @return
+     */
+    @Override
+    public JSONObject updateByType(String type, PageData param) {
+        JSONObject result = new JSONObject();
+        Integer code = HttpStatus.SUCCESS;
+        String msg = "success";
+        boolean flag = true;
+        try {
+            GroupChat info = getOne(new QueryWrapper<GroupChat>()
+                    .eq("group_id", param.getString("groupId"))
+                    .eq("create_user", param.getString("createUser")));
+            if (ObjectUtil.isNull(info)){
+                code = HttpStatus.ERROR;
+                msg = "群号与创建人信息不符";
+            }else {
+                UpdateWrapper<GroupChat> eq = new UpdateWrapper<>();
+                if (type.equals("0")) eq.set("group_name",param.getString("value"));
+                if (type.equals("1")) eq.set("remark",param.getString("value"));
+                if (type.equals("2")) eq.set("type",param.getString("value"));
+                eq.eq("group_id", param.getString("groupId")).eq("create_user", param.getString("createUser"));
+                flag = update(eq);
+            }
+        }catch (Exception e){
+            code = HttpStatus.ERROR;
+            msg = "系统异常,异常信息"+e.toString();
+        }
+        result.put("code",code);
+        result.put("msg",msg);
+        result.put("data",flag);
+        return result;
+    }
+
     public JSONObject getResultInfo(List<GroupPerson> all,PageData param,GroupChat e){
         JSONObject info = JSONObject.parseObject(JSON.toJSONString(e));
         info.put("addStatus",all.stream().filter(j -> j.getPersonId().equals(param.getString("userId"))).collect(Collectors.toList()).size()>0?1:0);
