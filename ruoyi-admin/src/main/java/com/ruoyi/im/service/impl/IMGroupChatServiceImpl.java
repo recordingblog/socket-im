@@ -106,37 +106,44 @@ public class IMGroupChatServiceImpl extends ServiceImpl<IMGroupChatMapper,GroupC
         String msg = "success";
         boolean flag = true;
         try {
-            SysUser user = userService.selectUserById(Long.parseLong(param.getString("userId")));
-            if (ObjectUtil.isNull(user)){
+            param.put("value",param.get("groupId"));
+            // 校验是否满员
+            if (!checkMaxPerson(param)){
                 code = HttpStatus.ERROR;
-                msg = "用户信息不存在";
+                msg = "该群聊已满员";
             }else {
-                // 状态校验
-                GroupPerson check = imGroupPersonService.getOne(
-                        new QueryWrapper<GroupPerson>().eq("group_id",
-                                param.getString("groupId")).eq("person_id", param.getString("userId")));
-                if (ObjectUtil.isNull(check)){
-                    // 设置查询参数
-                    param.put("value",param.getString("groupId"));
-                    // 获取群信息
-                    GroupChat info = getOne(getQueryEntity("group_id", param));
-                    // 创建加群用户实体类
-                    GroupPerson groupPerson = new GroupPerson();
-                    groupPerson.setGroupId(param.getString("groupId"));
-                    groupPerson.setPersonId(param.getString("userId"));
-                    groupPerson.setPersonType(0);
-                    groupPerson.setTime(DateUtils.getTime());
-                    // 判断加群类型是直接加入还是审核加入
-                    groupPerson.setStatus(info.getType()==0?0:1);
-                    flag = imGroupPersonService.save(groupPerson);
+                SysUser user = userService.selectUserById(Long.parseLong(param.getString("userId")));
+                if (ObjectUtil.isNull(user)){
+                    code = HttpStatus.ERROR;
+                    msg = "用户信息不存在";
                 }else {
-                    if (check.getStatus()==0) {
-                        code = HttpStatus.ERROR;
-                        msg = "该用户已申请加入群聊,请等待管理员进行审核";
-                    }
-                    else if (check.getPersonType()==1||check.getPersonType()==2) {
-                        code = HttpStatus.ERROR;
-                        msg = "该用户已经是群主或者管理员";
+                    // 状态校验
+                    GroupPerson check = imGroupPersonService.getOne(
+                            new QueryWrapper<GroupPerson>().eq("group_id",
+                                    param.getString("groupId")).eq("person_id", param.getString("userId")));
+                    if (ObjectUtil.isNull(check)){
+                        // 设置查询参数
+                        param.put("value",param.getString("groupId"));
+                        // 获取群信息
+                        GroupChat info = getOne(getQueryEntity("group_id", param));
+                        // 创建加群用户实体类
+                        GroupPerson groupPerson = new GroupPerson();
+                        groupPerson.setGroupId(param.getString("groupId"));
+                        groupPerson.setPersonId(param.getString("userId"));
+                        groupPerson.setPersonType(0);
+                        groupPerson.setTime(DateUtils.getTime());
+                        // 判断加群类型是直接加入还是审核加入
+                        groupPerson.setStatus(info.getType()==0?0:1);
+                        flag = imGroupPersonService.save(groupPerson);
+                    }else {
+                        if (check.getStatus()==0) {
+                            code = HttpStatus.ERROR;
+                            msg = "该用户已申请加入群聊,请等待管理员进行审核";
+                        }
+                        else if (check.getPersonType()==1||check.getPersonType()==2) {
+                            code = HttpStatus.ERROR;
+                            msg = "该用户已经是群主或者管理员";
+                        }
                     }
                 }
             }
@@ -148,6 +155,21 @@ public class IMGroupChatServiceImpl extends ServiceImpl<IMGroupChatMapper,GroupC
         result.put("msg",msg);
         result.put("data",flag);
         return result;
+    }
+
+    public boolean checkMaxPerson(PageData param){
+        boolean flag = true;
+        // 允许加入群聊的最大人数
+        Integer maxPerson = getOne(getQueryEntity("group_id", param)).getMaxPerson();
+        // 已加入群聊的最大人数
+        int size = imGroupPersonService.list(
+                new QueryWrapper<GroupPerson>().eq("group_id",
+                        param.getString("groupId"))).size();
+        // 已满员
+        if (maxPerson==size){
+            flag = false;
+        }
+        return flag;
     }
 
     /**
@@ -324,6 +346,54 @@ public class IMGroupChatServiceImpl extends ServiceImpl<IMGroupChatMapper,GroupC
                 if (type.equals("2")) eq.set("type",param.getString("value"));
                 eq.eq("group_id", param.getString("groupId")).eq("create_user", param.getString("createUser"));
                 flag = update(eq);
+            }
+        }catch (Exception e){
+            code = HttpStatus.ERROR;
+            msg = "系统异常,异常信息"+e.toString();
+        }
+        result.put("code",code);
+        result.put("msg",msg);
+        result.put("data",flag);
+        return result;
+    }
+
+    /**
+     * 群管理员设置
+     * @param pageData
+     * @return
+     */
+    @Override
+    public JSONObject groupManager(PageData pageData) {
+        JSONObject result = new JSONObject();
+        Integer code = HttpStatus.SUCCESS;
+        String msg = "success";
+        boolean flag = true;
+        try {
+            String type = pageData.getString("type");
+            // 校验当前登录用户是否为该群聊的群主
+            GroupChat check = getOne(new QueryWrapper<GroupChat>()
+                .eq("group_id", pageData.getString("groupId"))
+                .eq("create_user", pageData.getString("createUser"))
+            );
+            if (ObjectUtil.isNull(check)){
+                code = HttpStatus.ERROR;
+                msg = "群号与创建人信息不匹配";
+            }else {
+                boolean temp = true;
+                UpdateWrapper<GroupPerson> eq = new UpdateWrapper<>();
+                if (type.equals("1")){
+                    eq.set("person_type",1);
+                }else if (type.equals("2")){
+                    eq.set("person_type",0);
+                }else {
+                    code = HttpStatus.ERROR;
+                    msg = "类型不符";
+                    temp = false;
+                }
+                if (temp){
+                    eq.eq("group_id",pageData.getString("groupId")).eq("person_id",pageData.getString("mangerId"));
+                    flag = imGroupPersonService.update(eq);
+                }
             }
         }catch (Exception e){
             code = HttpStatus.ERROR;

@@ -23,4 +23,6 @@ public interface IMGroupChatService extends IService<GroupChat> {
     JSONObject dissolutionGroup(PageData pageData);
     // 群昵称|群描述|加群方式修改
     JSONObject updateByType(String type, PageData pageData);
+    // 群管理员设置
+    JSONObject groupManager(PageData pageData);
 }

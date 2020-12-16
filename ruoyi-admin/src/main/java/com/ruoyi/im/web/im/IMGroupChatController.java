@@ -34,11 +34,8 @@ public class IMGroupChatController extends BaseController {
     public AjaxResult createGroup(@ApiParam(value = "群头像",required = true) MultipartFile image){
         try {
             JSONObject result = imGroupChatService.create(super.getPageData(),image);
-            if (check(result)){
-                return new AjaxResult(HttpStatus.SUCCESS,"已创建",result.getString("data"));
-            }else {
-                return new AjaxResult(HttpStatus.ERROR,"创建失败,"+result.getString("msg"));
-            }
+            if (check(result)) return new AjaxResult(HttpStatus.SUCCESS,"已创建",result.getString("data"));
+            else return new AjaxResult(HttpStatus.ERROR,"创建失败,"+result.getString("msg"));
         }catch (Exception e){
             return new AjaxResult(HttpStatus.ERROR,"系统异常",e.toString());
         }
@@ -55,7 +52,7 @@ public class IMGroupChatController extends BaseController {
     public AjaxResult queryGroup(){
         try {
             PageData param = this.getPageData();
-            return !param.getString("queryType").equals("1")&&!param.getString("queryType").equals("2")
+            return ! param.getString("queryType").equals("1")&&!param.getString("queryType").equals("2")
                     ? new AjaxResult(HttpStatus.ERROR,"搜索类型不符")
                     : new AjaxResult(HttpStatus.SUCCESS,"success",imGroupChatService.queryGroup(param));
         }catch (Exception e){
@@ -92,11 +89,8 @@ public class IMGroupChatController extends BaseController {
     public AjaxResult quitGroup(){
         try {
             JSONObject result = imGroupChatService.quitGroup(this.getPageData());
-            if (check(result)){
-                return new AjaxResult(HttpStatus.SUCCESS,result.getString("msg"),result.getString("data"));
-            }else {
-                return new AjaxResult(HttpStatus.ERROR,result.getString("msg"));
-            }
+            if (check(result)) return new AjaxResult(HttpStatus.SUCCESS,result.getString("msg"),result.getString("data"));
+            else return new AjaxResult(HttpStatus.ERROR,result.getString("msg"));
         }catch (Exception e){
             return new AjaxResult(HttpStatus.ERROR,"系统异常",e.toString());
         }
@@ -113,11 +107,8 @@ public class IMGroupChatController extends BaseController {
     public AjaxResult dissolutionGroup(){
         try {
             JSONObject result = imGroupChatService.dissolutionGroup(this.getPageData());
-            if (check(result)){
-                return new AjaxResult(HttpStatus.SUCCESS,result.getString("msg"),result.getString("data"));
-            }else {
-                return new AjaxResult(HttpStatus.ERROR,result.getString("msg"));
-            }
+            if (check(result)) return new AjaxResult(HttpStatus.SUCCESS,result.getString("msg"),result.getString("data"));
+            else return new AjaxResult(HttpStatus.ERROR,result.getString("msg"));
         }catch (Exception e){
             return new AjaxResult(HttpStatus.ERROR,"系统异常",e.toString());
         }
@@ -167,12 +158,33 @@ public class IMGroupChatController extends BaseController {
             String type = this.getPageData().getString("type");
             if (type.equals("0") || type.equals("1") || type.equals("2")){
                 JSONObject result = imGroupChatService.updateByType(type,this.getPageData());
-                return check(imGroupChatService.updateByType(type,this.getPageData()))
+                return check(result)
                         ? new AjaxResult(HttpStatus.SUCCESS,result.getString("msg"),result.getString("data"))
                         : new AjaxResult(HttpStatus.ERROR,result.getString("msg"));
             }else {
                 return new AjaxResult(HttpStatus.ERROR,"参数类型不符");
             }
+        }catch (Exception e){
+            return new AjaxResult(HttpStatus.ERROR,"系统异常",e.toString());
+        }
+    }
+
+
+    @PostMapping("groupManager")
+    @ApiOperation("群管理设置|撤销")
+    @ApiOperationSupport(includeParameters = {"groupId","createUser","mangerId","type"})
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "groupId", value = "群号码", required = true),
+            @ApiImplicitParam(name = "createUser", value = "创建用户id(群主id)取当前登录id", required = true),
+            @ApiImplicitParam(name = "mangerId", value = "管理员id", required = true),
+            @ApiImplicitParam(name = "type", value = "1设置管理员 2撤销管理员", required = true),
+    })
+    public AjaxResult groupManager(){
+        try {
+            JSONObject result = imGroupChatService.groupManager(this.getPageData());
+            return check(result)
+                    ? new AjaxResult(HttpStatus.SUCCESS,result.getString("msg"),result.getString("data"))
+                    : new AjaxResult(HttpStatus.ERROR,result.getString("msg"));
         }catch (Exception e){
             return new AjaxResult(HttpStatus.ERROR,"系统异常",e.toString());
         }
